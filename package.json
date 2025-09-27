@@ -10,12 +10,13 @@
     "express": "^4.21.2",
     "express-openid-connect": "^2.19.2",
     "express-session": "^1.15.6",
+    "nodemon": "^3.1.10",
     "socket.io": "^1.7.4",
     "swig": "^1.4.2"
   },
   "scripts": {
     "start": "node server.js",
-    "dev" : "nodemon server.js"
+    "dev": "nodemon server.js"
   },
   "author": "UNA",
   "license": "MIT",
