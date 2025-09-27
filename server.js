@@ -1,9 +1,11 @@
 require('dotenv').config();
 
 const express = require('express');
+const session = require('express-session');
 const { auth, requiresAuth } = require('express-openid-connect');
 const cons = require('consolidate');
 const path = require('path');
+const ExpressOIDC  = require('@okta/oidc-middleware').ExpressOIDC;
 
 const app = express();
 
@@ -13,7 +15,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'html');
 
 // archivos estáticos
-app.use('/static', express.static(path.join(__dirname, 'static')));
+app.use('/static', express.static('static'));
 
 // configuración de Auth0 (lee desde .env)
 const config = {
@@ -23,30 +25,60 @@ const config = {
   baseURL: process.env.BASE_URL || 'http://localhost:3000',
   clientID: process.env.CLIENT_ID,
   issuerBaseURL: process.env.ISSUER_BASE_URL,
-  authorizationParams: {
-    response_type: 'code',
-    scope: 'openid profile email'
-  }
 };
+
+
+let oidc = new ExpressOIDC({
+  issuer: process.env.ISSUER_BASE_URL + '/',
+  client_id: process.env.CLIENT_ID,
+  client_secret: process.env.CLIENT_SECRET,
+  redirect_uri: process.env.REDIRECT_URI,
+  appBaseURL: process.env.BASE_URL || 'http://localhost:3000',
+  scope: 'openid profile'
+});
 
 // monta las rutas de login/logout/callback
 app.use(auth(config));
 
+app.use(session({
+  secret: process.env.SECRET,
+  cookie: { httpOnly: true },
+}));
+
+app.use(oidc.router);
+
 // Rutas
 app.get('/', (req, res) => {
-  // pasamos isAuthenticated y user a la vista por conveniencia
-  res.render('index', {
-    isAuthenticated: req.oidc.isAuthenticated(),
-    user: req.oidc.user || {}
-  });
+  
+  if (req.oidc.isAuthenticated()) {
+    return res.redirect('/dashboard');
+  }
+
+  res.render('index');
 });
 
 app.get('/dashboard', requiresAuth(), (req, res) => {
-  res.render('dashboard', { user: req.oidc.user });
+
+  var payload = Buffer.from(req.appSession.id_token.split('.')[1], 'base64').toString('utf-8');
+  const userInfo = JSON.parse(payload);
+
+
+  res.render('dashboard', { user: userInfo });
 });
+
+
+const openid = require('openid-client');
+openid.Issuer.defaultHttpOptions.timeout = 20000;
 
 // levantar servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+
+oidc.on('ready', () => {
+  app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  });
+});
+
+oidc.on('error', err => {
+  console.error('OIDC error: ', err);
 });
