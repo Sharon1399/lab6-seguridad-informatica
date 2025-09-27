@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center">Este no es el UNAChat!</h1>
+
+    {% if isAuthenticated %}
+      <div class="jumbotron">
+        <p>Hola {{ user.name || user.nickname }} — <a href="/dashboard">Ir al dashboard</a></p>
+        <p><a href="/logout">Cerrar sesión</a></p>
+      </div>
+    {% else %}
+      <div class="jumbotron">
+        <p>La idea es que ud pueda implementar OAuth con el UNAChat</p>
+        <p>De click en <a href="/login">login</a> para continuar.</p>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
