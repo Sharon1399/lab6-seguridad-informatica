@@ -34,6 +34,7 @@ let oidc = new ExpressOIDC({
   client_secret: process.env.CLIENT_SECRET,
   redirect_uri: process.env.REDIRECT_URI,
   appBaseURL: process.env.BASE_URL || 'http://localhost:3000',
+  routes: { callback: {defaultRedirect: '/dashboard' } },
   scope: 'openid profile'
 });
 
