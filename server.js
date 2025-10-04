@@ -4,7 +4,7 @@ const express = require('express');
 const { auth, requiresAuth } = require('express-openid-connect');
 const cons = require('consolidate');
 const path = require('path');
- 
+
 
 const app = express();
 
